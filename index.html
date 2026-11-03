@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Journey Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui, sans-serif;}
+body{
+  min-height:100vh;
+  background:#1a1a24;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.card{
+  background:#272738;
+  border-radius:16px;
+  padding:32px;
+  width:min(520px, 100%);
+  text-align:center;
+  box-shadow:0 8px 24px #00000044;
+}
+.date-title{font-size:28px;margin-bottom:12px;color:#ffd89b;}
+.city{font-size:20px;margin-bottom:20px;color:#b8c8ff;}
+.info{font-size:16px;line-height:1.8;margin-bottom:28px;color:#eee;}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+button{
+  padding:10px 18px;
+  border:none;
+  border-radius:999px;
+  background:#5b6ed8;
+  color:white;
+  font-size:15px;
+  cursor:pointer;
+}
+button:hover{background:#4454b8;}
+button.stop{background:#d85b5b;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="date-title" id="dateText"></div>
+  <div class="city" id="cityText"></div>
+  <div class="info" id="infoText"></div>
+  <div class="btns">
+    <button id="prevBtn">← 上一天</button>
+    <button id="playBtn">自动播放</button>
+    <button id="nextBtn">下一天 →</button>
+  </div>
+</div>
+
+<script>
+// ========== 在这里修改你的数据 ==========
+const dayData = [
+  {day:1, city:"首尔", desc:"文字记录：120｜图片：2｜语音：1"},
+  {day:2, city:"仁川", desc:"文字记录：96｜图片：4｜语音：0"},
+  {day:3, city:"釜山", desc:"文字记录：155｜图片：1｜语音：2"},
+  {day:4, city:"大邱", desc:"文字记录：88｜图片：3｜语音：1"},
+  {day:5, city:"济州", desc:"文字记录：210｜图片：5｜语音：3"},
+];
+const MAX_DAY = dayData.length;
+let autoTimer = null;
+let isPlaying = false;
+
+// 获取url参数 ?day=
+const params = new URLSearchParams(location.search);
+let currentDay = Number(params.get("day")) || 1;
+
+// 根据day找到对应条目
+function getDayItem(d){
+  return dayData.find(item=>item.day === d);
+}
+// 渲染页面
+function render(){
+  const item = getDayItem(currentDay);
+  document.getElementById("dateText").innerText = `10月${item.day}日`;
+  document.getElementById("cityText").innerText = item.city;
+  document.getElementById("infoText").innerText = item.desc;
+  // 更新地址栏，分享链接可以定位
+  params.set("day", currentDay);
+  history.replaceState(null, "", `?${params.toString()}`);
+}
+
+function next(){
+  if(currentDay < MAX_DAY){
+    currentDay++;
+    render();
+  }
+}
+function prev(){
+  if(currentDay > 1){
+    currentDay--;
+    render();
+  }
+}
+function togglePlay(){
+  if(isPlaying){
+    clearInterval(autoTimer);
+    autoTimer = null;
+    isPlaying = false;
+    document.getElementById("playBtn").innerText = "自动播放";
+    document.getElementById("playBtn").classList.remove("stop");
+  }else{
+    autoTimer = setInterval(()=>{
+      if(currentDay >= MAX_DAY){
+        clearInterval(autoTimer);
+        isPlaying = false;
+        document.getElementById("playBtn").innerText = "自动播放";
+        document.getElementById("playBtn").classList.remove("stop");
+        return;
+      }
+      next();
+    }, 1800); // 1.8秒翻一页，可以改速度
+    isPlaying = true;
+    document.getElementById("playBtn").innerText = "暂停";
+    document.getElementById("playBtn").classList.add("stop");
+  }
+}
+
+// 绑定按钮
+document.getElementById("nextBtn").onclick = next;
+document.getElementById("prevBtn").onclick = prev;
+document.getElementById("playBtn").onclick = togglePlay;
+
+// 初始化
+render();
+</script>
+</body>
+</html>
